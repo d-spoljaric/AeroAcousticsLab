@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # =============================== Given Simulation Constants ===================================
 # ========== ISA Conditions at 0m =========
@@ -22,10 +23,10 @@ T_blade = thrust_total/B # [N], thrust per blade
 # ============================== Chosen Simulation Constants ==================================
 
 t_total = 20 # [s], total simulation time
-dt = 0.1 # [s], simulation time incremenets
+dt = 0.01 # [s], simulation time incremenets
 
 R_0 = 100 # [m], magnitude of observer location vector
-observer_theta = np.pi/4 # [rad], theta angle of observer position
+observer_theta = 0 # [rad], theta angle of observer position
 observer_phi = np.pi/4 # [rad], phi angle of observer position
 
 # ================================ Position Vectors and Scalars =========================================
@@ -61,10 +62,10 @@ def M_vec(M: int|float, omega: int|float, t: int|float, angle_offset: int|float)
     '''
     Returns Mach vector
     '''
-    return M*np.array([np.cos(omega*t + angle_offset) - np.sin(omega*t + angle_offset), np.sin(omega*t + angle_offset) + np.cos(omega*t + angle_offset), 0])
+    return M*np.array([-np.sin(omega*t + angle_offset), np.cos(omega*t + angle_offset), 0])
 
 # ============================= Observer and Retarded Time ====================================
-t_observer = np.arange(0, t_total + dt, dt)
+t_observer= np.arange(0, t_total + dt, dt)
 
 def compute_t_retarded(t: int | float, r: int | float) -> int | float:
     '''
@@ -79,8 +80,10 @@ def pressure(r: int|float, M: int|float, Fr: int|float, Mr: int|float) -> int|fl
     Returns scalar pressure value
     """
     frac1 = -Fr/((r**2)*(1-Mr)**2)
-    frac2 = (Mr-M)**2/(1-Mr)
-    return (1/4*np.pi)*frac1*(frac2+1)
+    frac2 = (Mr-M**2)/(1-Mr)
+    return (1/(4*np.pi))*frac1*(frac2+1)
+
+# ============================= Helper Functions ========================================
 
 
 # ============================ Simulation =========================================
@@ -90,7 +93,7 @@ if __name__ == "__main__":
     t_retarded = np.zeros(shape = t_observer.shape)
     for i in range(B):
         for j in range(len(t_observer)):
-            omega_t_offset = blade_offset#blade_offset*i
+            omega_t_offset = 0 #blade_offset*i
             
             r_p = r_phase(R_0, R_1, observer_theta, observer_phi, vel_rad, t_observer[j], omega_t_offset)
             t_ret = compute_t_retarded(t_observer[j], r_p)
@@ -102,9 +105,9 @@ if __name__ == "__main__":
             
             Fr = F_r(T_blade, observer_theta)
             M = M_vec(M_force, vel_rad, t_ret, omega_t_offset)
-            Mr = np.dot(M, r_t)
+            Mr = np.dot(M, r_t/np.linalg.norm(r_t))
             
-            p_total[j] += pressure(R_0, M_force, Fr, Mr)
+            p_total[j] += pressure(np.linalg.norm(r_t), M_force, Fr, Mr)
     
-    plt.plot(t_retarded, p_total)
+    plt.plot(t_observer, p_total)
     plt.show()
