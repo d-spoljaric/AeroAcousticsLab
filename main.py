@@ -22,8 +22,8 @@ T_blade = thrust_total/B # [N], thrust per blade
 
 # ============================== Chosen Simulation Constants ==================================
 
-t_total = 20 # [s], total simulation time
-dt = 0.01 # [s], simulation time incremenets
+t_total = .1 # [s], total simulation time
+dt = 0.001 # [s], simulation time incremenets
 
 R_0 = 100 # [m], magnitude of observer location vector
 observer_theta = 0 # [rad], theta angle of observer position
@@ -32,19 +32,19 @@ observer_phi = np.pi/4 # [rad], phi angle of observer position
 # ================================ Position Vectors and Scalars =========================================
 def x_M(R: int | float, theta: int | float, phi: int | float) -> np.ndarray:
     '''
-    Returns a row vector of the poisition of the observer with respect to the origin
+    Returns a row vector of the position of the observer with respect to the origin
     '''
     return R*np.array([np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)])
 
 def x_S(R: int | float, omega: int | float, t: int | float, angle_offset: int|float) -> np.ndarray:
     '''
-    Returns a row vector of the poisition of the force with respect to the origin
+    Returns a row vector of the position of the force with respect to the origin
     '''
     return R*np.array([np.cos(omega*t + angle_offset), np.sin(omega*t + angle_offset), 0])
 
 def r(x_m: np.ndarray, x_s: np.ndarray) -> np.ndarray:
     '''
-    Returns a row vector of the poisition of the observer with respect to the force
+    Returns a row vector of the positiion of the observer with respect to the force
     '''
     return x_m - x_s
 
@@ -52,11 +52,12 @@ def r_phase(R0: int | float, R1: int | float, theta: int | float, phi: int | flo
     return R0 - R1 * np.cos(theta)*np.cos(omega*t + angle_offset - phi)
 
 # ============================== Force and Mach in direction of observer =======================
-def F_r(F: int|float, theta: int|float) -> int|float:
+def F_r(F: int|float, theta: int|float, r: int|float) -> int|float:
     '''
-    Returns force scalar in direction of observer
+    Returns scalar of force in direction of observer
     '''
-    return F*np.cos(theta)
+    global R_0
+    return F*R_0*np.cos(theta)/r
 
 def M_vec(M: int|float, omega: int|float, t: int|float, angle_offset: int|float) -> np.ndarray:
     '''
@@ -90,10 +91,11 @@ def pressure(r: int|float, M: int|float, Fr: int|float, Mr: int|float) -> int|fl
 
 if __name__ == "__main__":
     p_total = np.zeros(shape=t_observer.shape)
+    p_blade = np.zeros(shape=(len(t_observer), 4))
     t_retarded = np.zeros(shape = t_observer.shape)
     for i in range(B):
         for j in range(len(t_observer)):
-            omega_t_offset = 0 #blade_offset*i
+            omega_t_offset = blade_offset*i
             
             r_p = r_phase(R_0, R_1, observer_theta, observer_phi, vel_rad, t_observer[j], omega_t_offset)
             t_ret = compute_t_retarded(t_observer[j], r_p)
@@ -103,11 +105,22 @@ if __name__ == "__main__":
             xS = x_S(R_1, vel_rad, t_ret, omega_t_offset)
             r_t = r(xM, xS)
             
-            Fr = F_r(T_blade, observer_theta)
+            Fr = F_r(T_blade, observer_theta, R_0)
             M = M_vec(M_force, vel_rad, t_ret, omega_t_offset)
             Mr = np.dot(M, r_t/np.linalg.norm(r_t))
             
-            p_total[j] += pressure(np.linalg.norm(r_t), M_force, Fr, Mr)
+            p = pressure(np.linalg.norm(r_t), M_force, Fr, Mr)
+            
+            p_blade[j, i] = p
+            
+            p_total[j] += p
+            
+    for i in range(B):
+        plt.plot(t_observer, p_blade[:, i], label = f"Blade {i+1}")
+    plt.legend()
+    plt.minorticks_on()
+    plt.grid(True, which = "both")
+    plt.show()
     
     plt.plot(t_observer, p_total)
     plt.show()
