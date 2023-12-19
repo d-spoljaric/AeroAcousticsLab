@@ -27,8 +27,13 @@ t_total =  rotations*2*np.pi/vel_rad# [s], total simulation time
 dt = 0.00005 # [s], simulation time incremenets
 
 R_0 = 100 # [m], magnitude of observer location vector
-observer_phi_list = np.arange(0, 105, 15) # [rad], phi angle of observer position
-observer_theta = np.pi/4 # [rad], theta angle of observer position
+observer_phi = np.pi/4 # [rad], phi angle of observer position
+dtheta_large = 2
+dtheta_small = 0.05
+theta_max_beg = 88
+theta_max = 90
+observer_theta_list_beg = np.arange(0, theta_max_beg + dtheta_large, dtheta_large) # [rad], theta angle of observer position
+observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max + dtheta_small, dtheta_small))
 
 # ================================ Position Vectors and Scalars =========================================
 def x_M(R: int | float, theta: int | float, phi: int | float) -> np.ndarray:
@@ -50,7 +55,7 @@ def r(x_m: np.ndarray, x_s: np.ndarray) -> np.ndarray:
     return x_m - x_s
 
 def r_phase(R0: int | float, R1: int | float, theta: int | float, phi: int | float, omega: int | float, t: int | float, angle_offset: int|float) -> int | float:
-    return R0 - R1 * np.cos(theta)*np.cos(omega*t + angle_offset - phi)
+    return R0 - R1 * np.sin(theta)*np.cos(omega*t + angle_offset - phi)
 
 # ============================== Force and Mach in direction of observer =======================
 def F_r(F: int|float, theta: int|float, r: int|float) -> int|float:
@@ -107,24 +112,25 @@ def compute_rms(x: np.ndarray) -> int|float:
 
 # ================================ Main ==========================================
 if __name__ == "__main__":
-    SPL_list = np.zeros(shape = observer_phi_list.shape)
-    PWL_list = np.zeros(shape = observer_phi_list.shape)
+    SPL_list = np.zeros(shape = observer_theta_list.shape)
+    PWL_list = np.zeros(shape = observer_theta_list.shape)
+    prms_list = np.zeros(shape = observer_theta_list.shape)
     
-    for i in tqdm(range(len(observer_phi_list)), desc = "Looping Through Observer Phi"):
-        observer_phi = np.deg2rad(observer_phi_list[i])
-        print(observer_phi)
+    for i in tqdm(range(len(observer_theta_list)), desc = "Looping Through Observer theta"):
+        observer_theta = np.deg2rad(observer_theta_list[i])
+        print(observer_theta)
         
         p_total = np.zeros(shape=t_observer.shape)
         p_blade = np.zeros(shape=(len(t_observer), B))
         t_retarded = np.zeros(shape = t_observer.shape)
         
-        for i in tqdm(range(B), desc = "Looping throgh blades"):
-            for j in tqdm(range(len(t_observer)), desc = "Looping through time"):
+        for k in tqdm(range(B), desc = "Looping throgh blades"):
+            for j in range(len(t_observer)):
                 omega_t_offset = blade_offset*i
 
                 r_p = r_phase(R_0, R_1, observer_theta, observer_phi, vel_rad, t_observer[j], omega_t_offset)
                 t_ret = compute_t_retarded(t_observer[j], r_p)
-                if i==0:
+                if k==0:
                     t_retarded[j] += t_ret
 
                 xM = x_M(R_0, observer_theta, observer_phi)
@@ -137,13 +143,14 @@ if __name__ == "__main__":
 
                 p = pressure(np.linalg.norm(r_t), M_force, Fr, Mr)
 
-                p_blade[j, i] = p
+                p_blade[j, k] = p
                 
                 p_total[j] += p
                 # print(p_total)
                 # input()
                 
-                SPL_list[i] = compute_spl(p_total)
+        SPL_list[i] = compute_spl(p_total)
+        prms_list[i] = compute_rms(p_total)
                 # PWL_list[i] = compute_pwl(p_total)
             
         # for i in range(B):
@@ -157,13 +164,21 @@ if __name__ == "__main__":
         # plt.show()
     
     ax = plt.subplot(1, 1, 1)
-    # ax.get_yaxis().get_major_formatter().set_useOffset(False)
-    # plt.scatter(observer_phi_list, PWL_list)
-    plt.scatter(observer_phi_list, SPL_list)
+    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    plt.plot(observer_theta_list, SPL_list, color = "k", linewidth = 0.8)
     plt.minorticks_on()
     plt.grid(True, which = "both")
-    plt.xlabel(r"\phi [rad]")
+    plt.xlabel(r"$\theta$ [rad]")
     plt.ylabel("SPL")
+    plt.show()
+    
+    ax2 = plt.subplot(1, 1, 1)
+    ax2.get_yaxis().get_major_formatter().set_useOffset(False)
+    plt.plot(observer_theta_list, prms_list, color = "k", linewidth = 0.8)
+    plt.minorticks_on()
+    plt.grid(True, which = "both")
+    plt.xlabel(r"$\theta$ [rad]")
+    plt.ylabel(r"$P_{rms}$ [Pa]")
     plt.show()
  
  
