@@ -30,10 +30,10 @@ R_0 = 100 # [m], magnitude of observer location vector
 observer_phi = np.pi/4 # [rad], phi angle of observer position
 dtheta_large = 2
 dtheta_small = 0.05
-theta_max_beg = 88
+theta_max_beg = 85
 theta_max = 90
 observer_theta_list_beg = np.arange(0, theta_max_beg + dtheta_large, dtheta_large) # [rad], theta angle of observer position
-observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max + dtheta_small, dtheta_small))
+observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max, dtheta_small))
 
 # ================================ Position Vectors and Scalars =========================================
 def x_M(R: int | float, theta: int | float, phi: int | float) -> np.ndarray:
@@ -159,6 +159,7 @@ if __name__ == "__main__":
     plt.grid(True, which = "both")
     plt.xlabel(r"$\theta$ [rad]")
     plt.ylabel("SPL")
+    plt.ylim([0, 1.05*np.max(SPL_list)])
     plt.show()
     
     ax2 = plt.subplot(1, 1, 1)
@@ -168,6 +169,7 @@ if __name__ == "__main__":
     plt.grid(True, which = "both")
     plt.xlabel(r"$\theta$ [rad]")
     plt.ylabel(r"$P_{rms}$ [Pa]")
+    plt.ylim([0, 1.05*np.max(prms_list)])
     plt.show()
  
  
