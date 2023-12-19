@@ -118,7 +118,6 @@ if __name__ == "__main__":
     
     for i in tqdm(range(len(observer_theta_list)), desc = "Looping Through Observer theta"):
         observer_theta = np.deg2rad(observer_theta_list[i])
-        print(observer_theta)
         
         p_total = np.zeros(shape=t_observer.shape)
         p_blade = np.zeros(shape=(len(t_observer), B))
@@ -150,18 +149,8 @@ if __name__ == "__main__":
                 # input()
                 
         SPL_list[i] = compute_spl(p_total)
+        # PWL_list[i] = compute_pwl(p_total)
         prms_list[i] = compute_rms(p_total)
-                # PWL_list[i] = compute_pwl(p_total)
-            
-        # for i in range(B):
-        #     plt.plot(t_observer, p_blade[:, i], label = f"Blade {i+1}")
-        # plt.legend()
-        # plt.minorticks_on()
-        # plt.grid(True, which = "both")
-        # plt.show()
-        
-        # plt.plot(t_observer, p_total)
-        # plt.show()
     
     ax = plt.subplot(1, 1, 1)
     ax.get_yaxis().get_major_formatter().set_useOffset(False)
