@@ -26,14 +26,19 @@ rotations = 8
 t_total =  rotations*2*np.pi/vel_rad# [s], total simulation time
 dt = 0.00005 # [s], simulation time incremenets
 
+## The simulation is split into 2 "phases". The first phase is simulated on a coarser set of theta values
+## since and the second phase, where the gradient increases and the SPL plot becomes asymptotic, has a much 
+## smaller step in theta. 
+
 R_0 = 100 # [m], magnitude of observer location vector
 observer_phi = np.pi/4 # [rad], phi angle of observer position
-dtheta_large = 2
-dtheta_small = 0.05
-theta_max_beg = 85
-theta_max = 90
-observer_theta_list_beg = np.arange(0, theta_max_beg + dtheta_large, dtheta_large) # [rad], theta angle of observer position
-observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max, dtheta_small))
+dtheta_large = 5 # [rad], large steps in theta for first phase of simulation
+dtheta_small = 0.1 # [rad], small steps in theta for first phase of simulation
+theta_max_beg = 85 # [rad], end of first phase and start of second phase of simulation
+theta_min = 0 # [rad], minimum theta for simulation
+theta_max = 90 # [rad], maximum theta for simulation
+observer_theta_list_beg = np.arange(theta_min, theta_max_beg + dtheta_large, dtheta_large) # [rad], array of theta for first phase
+observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max, dtheta_small)) # [rad], array of all theta
 
 # ================================ Position Vectors and Scalars =========================================
 def x_M(R: int | float, theta: int | float, phi: int | float) -> np.ndarray:
@@ -83,13 +88,15 @@ def compute_t_retarded(t: int | float, r: int | float) -> int | float:
     return t - r/c
 
 # ============================= Time Domain Pressure ========================================
-def pressure(r: int|float, M: int|float, Fr: int|float, Mr: int|float) -> int|float:
+def pressure(r: int|float, M: int|float, Fr: int|float, Mr: int|float, Fr_dot: int|float) -> int|float:
     """
     Returns scalar pressure value
     """
-    frac1 = -Fr/((r**2)*(1-Mr)**2)
-    frac2 = (Mr-M**2)/(1-Mr)
-    return (1/(4*np.pi))*frac1*(frac2+1)
+    global c
+    frac1 = (-1/c)*(Fr_dot/(r*(1-Mr)**2))
+    frac2 = -Fr/((r**2)*(1-Mr)**2)
+    frac3 = (Mr-M**2)/(1-Mr)
+    return (1/(4*np.pi))*(frac1 + frac2*(frac3+1))
 
 # ============================= Sound Functions ========================================
 def compute_spl(p: np.ndarray) -> int|float:
@@ -111,6 +118,10 @@ def compute_rms(x: np.ndarray) -> int|float:
     return np.sqrt(np.mean(x**2))
 
 # ================================ Main ==========================================
+
+constant_force = False
+s = 2
+
 if __name__ == "__main__":
     SPL_list = np.zeros(shape = observer_theta_list.shape)
     PWL_list = np.zeros(shape = observer_theta_list.shape)
@@ -122,31 +133,55 @@ if __name__ == "__main__":
         p_total = np.zeros(shape=t_observer.shape)
         p_blade = np.zeros(shape=(len(t_observer), B))
         t_retarded = np.zeros(shape = t_observer.shape)
+        omega_t_blade = np.zeros(shape = (len(t_observer), B))
+        f_blade = np.zeros(shape = (len(t_observer), B))
         
-        for k in tqdm(range(B), desc = "Looping throgh blades"):
+        for k in tqdm(range(B), desc = "Looping throgh blades"):    
             for j in range(len(t_observer)):
-                omega_t_offset = blade_offset*i
-
+                omega_t_offset = blade_offset*k 
                 r_p = r_phase(R_0, R_1, observer_theta, observer_phi, vel_rad, t_observer[j], omega_t_offset)
                 t_ret = compute_t_retarded(t_observer[j], r_p)
                 if k==0:
                     t_retarded[j] += t_ret
+                        
+                if constant_force:
+                    force_blade = T_blade
+                    force_blade_dot = 0
+                else:
+                    force_blade = T_blade*np.sin(t_ret*s*vel_rad/(2*np.pi))
+                    force_blade_dot = T_blade*(s*vel_rad/(2*np.pi))*np.cos(t_ret*s*vel_rad/(2*np.pi))
+                    
+                f_blade[j, k] = force_blade
 
                 xM = x_M(R_0, observer_theta, observer_phi)
                 xS = x_S(R_1, vel_rad, t_ret, omega_t_offset)
                 r_t = r(xM, xS)
-
-                Fr = F_r(T_blade, observer_theta, R_0)
+                
+                f_blade_vec = np.array([0, 0, force_blade])
+                f_blade_dot_vec = np.array([0, 0, force_blade_dot])
+                
+                Fr = np.dot(f_blade_vec, r_t/np.linalg.norm(r_t))
+                Fr_dot = np.dot(f_blade_dot_vec, r_t/np.linalg.norm(r_t))
                 M = M_vec(M_force, vel_rad, t_ret, omega_t_offset)
                 Mr = np.dot(M, r_t/np.linalg.norm(r_t))
 
-                p = pressure(np.linalg.norm(r_t), M_force, Fr, Mr)
+                p = pressure(np.linalg.norm(r_t), M_force, Fr, Mr, Fr_dot)
 
                 p_blade[j, k] = p
                 
                 p_total[j] += p
+                omega_t_blade[j, k] = omega_t_offset+vel_rad*t_observer[j]
+                a = 1
                 # print(p_total)
                 # input()
+        
+        
+        # for i in range(B):
+        #     plt.plot(t_observer, p_blade[:, i], label = f"Blade {i+1}")
+        # plt.legend()
+        # plt.minorticks_on()
+        # plt.grid(True, which = "both")
+        # plt.show()
                 
         SPL_list[i] = compute_spl(p_total)
         # PWL_list[i] = compute_pwl(p_total)
@@ -171,5 +206,6 @@ if __name__ == "__main__":
     plt.ylabel(r"$P_{rms}$ [Pa]")
     plt.ylim([0, 1.05*np.max(prms_list)])
     plt.show()
- 
- 
+    
+    
+    
