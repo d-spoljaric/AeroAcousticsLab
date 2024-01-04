@@ -23,17 +23,17 @@ SPL_M03_B5_var = np.genfromtxt(r"Data\SPL_M03_B5_var.dat")
 SPL_M06_B5_var = np.genfromtxt(r"Data\SPL_M06_B5_var.dat")
 
 # Filtered or angles requested in assignment
-directivity_plot_theta = np.arange(0, 105, 15)
+# directivity_plot_theta = np.arange(0, 105, 15)
 
-SPL_M03_B4_const_filtered = filter_angles(SPL_M03_B4_const, directivity_plot_theta)
-SPL_M06_B4_const_filtered = filter_angles(SPL_M06_B5_const, directivity_plot_theta)
-SPL_M03_B5_const_filtered = filter_angles(SPL_M03_B5_const, directivity_plot_theta)
-SPL_M06_B5_const_filtered = filter_angles(SPL_M06_B5_const, directivity_plot_theta)
+# SPL_M03_B4_const_filtered = filter_angles(SPL_M03_B4_const, directivity_plot_theta)
+# SPL_M06_B4_const_filtered = filter_angles(SPL_M06_B5_const, directivity_plot_theta)
+# SPL_M03_B5_const_filtered = filter_angles(SPL_M03_B5_const, directivity_plot_theta)
+# SPL_M06_B5_const_filtered = filter_angles(SPL_M06_B5_const, directivity_plot_theta)
 
-SPL_M03_B4_var_filtered = filter_angles(SPL_M03_B4_var, directivity_plot_theta)
-SPL_M06_B4_var_filtered = filter_angles(SPL_M06_B4_var, directivity_plot_theta)
-SPL_M03_B5_var_filtered = filter_angles(SPL_M03_B5_var, directivity_plot_theta)
-SPL_M06_B5_var_filtered = filter_angles(SPL_M06_B5_var, directivity_plot_theta)
+# SPL_M03_B4_var_filtered = filter_angles(SPL_M03_B4_var, directivity_plot_theta)
+# SPL_M06_B4_var_filtered = filter_angles(SPL_M06_B4_var, directivity_plot_theta)
+# SPL_M03_B5_var_filtered = filter_angles(SPL_M03_B5_var, directivity_plot_theta)
+# SPL_M06_B5_var_filtered = filter_angles(SPL_M06_B5_var, directivity_plot_theta)
 
 
 
