@@ -11,11 +11,11 @@ rho = 1.225 # [kg/m^3], density
 # =========================================
 thrust_total = 2000 # [N]
 r_thrust = 0.85 # [-], location of force as a fraction of propeller radius
-M_tip = 0.6 # [-], propeller tip Mach number
+M_tip = 0.3 # [-], propeller tip Mach number
 M_force = M_tip*r_thrust # [-], Mach number at force location
 D = 1 # [m], propeller radius
 R_1 = r_thrust*D/2 # [m], magnitude of location of force application vector
-B = 5 # [-], number of propeller blades
+B = 4 # [-], number of propeller blades
 c = np.sqrt(1.4*287.15*T) # [m/s], speed of sound
 vel_rad = M_tip*r_thrust*c/R_1 # [rad/s], radial velocity of the location of force application
 blade_offset = 2*np.pi/B # [rad], constant angle offset for each blade of the propeller 
@@ -122,7 +122,7 @@ def compute_rms(x: np.ndarray) -> int|float:
 # ================================ Main ==========================================
 
 # Periodic force settings
-periodic_force = True
+periodic_force = False
 periodic_amplitude = 100
 s = 1
 period = (1/s)*2*np.pi/vel_rad
