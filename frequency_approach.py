@@ -3,6 +3,8 @@ import scipy as sp
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+# Fuck this course
+
 # =============================== Given Simulation Constants ===================================
 # ========== ISA Conditions at 0m =========
 T = 288.15  # [K], temperature
