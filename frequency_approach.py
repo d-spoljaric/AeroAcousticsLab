@@ -23,9 +23,9 @@ blade_offset = 2 * np.pi / B  # [rad], constant angle offset for each blade of t
 # ============================== Chosen Simulation Constants ==================================
 R_0 = 100  # [m], magnitude of observer location vector
 observer_phi = np.pi / 4  # [rad], phi angle of observer position
-# observer_theta_list = np.arange(0.00001, 105, 15)
-observer_theta_list = np.linspace(0.00001, 90, 100)
-# observer_theta_list = np.array([45])
+# observer_theta_list = np.arange(0., 105, 15)
+observer_theta_list = np.linspace(0.001, 90, 100)
+# observer_theta_list = np.array([0])
 
 periodic_force = 100 #[N], amplitude of periodic force
 n = 1 # Determines the harmonic of the force
@@ -116,11 +116,15 @@ PWL_array = np.zeros(shape = observer_theta_list.shape)
 
 
 # Calculating p_mB for each theta and m
-for count_theta, theta in tqdm(enumerate(observer_theta_list), desc="Looping over theta"):
-    for count_m, m in tqdm(enumerate(m_array), desc="Looping over m"):
+for count_theta in tqdm(range(observer_theta_list.shape[0]), desc="Looping over theta"):
+    theta = observer_theta_list[count_theta]
+    for count_m in tqdm(range(m_array.shape[0]), desc="Looping over m"):
+        m = m_array[count_m]
+        p_mB = 0 + 0j
         for s in s_array:
-            p_mB = pressure(observer_phi, theta, force, s, m)
-            p_mB_array[count_theta, count_m] = p_mB
+            p_mB_s = pressure(observer_phi, theta, force, s, m)
+            p_mB += p_mB_s
+        p_mB_array[count_theta, count_m] = p_mB
 
     # Reordering the p_mB array as required by numpy ifft method
     p_mB_temp = p_mB_array[count_theta, :]
