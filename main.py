@@ -15,7 +15,7 @@ M_tip = 0.3 # [-], propeller tip Mach number
 M_force = M_tip*r_thrust # [-], Mach number at force location
 D = 1 # [m], propeller radius
 R_1 = r_thrust*D/2 # [m], magnitude of location of force application vector
-B = 4 # [-], number of propeller blades
+B = 1 # [-], number of propeller blades
 c = np.sqrt(1.4*287.15*T) # [m/s], speed of sound
 vel_rad = M_tip*r_thrust*c/R_1 # [rad/s], radial velocity of the location of force application
 blade_offset = 2*np.pi/B # [rad], constant angle offset for each blade of the propeller 
@@ -33,14 +33,15 @@ dt = 0.00005 # [s], simulation time incremenets
 
 R_0 = 100 # [m], magnitude of observer location vector
 observer_phi = np.pi/4 # [rad], phi angle of observer position
-dtheta_large = 1 # [rad], large steps in theta for first phase of simulation
-dtheta_small = 0.05 # [rad], small steps in theta for first phase of simulation
-theta_max_beg = 85 # [rad], end of first phase and start of second phase of simulation
-theta_min = 0 # [rad], minimum theta for simulation
-theta_max = 90 # [rad], maximum theta for simulation
-observer_theta_list_beg = np.arange(theta_min, theta_max_beg + dtheta_large, dtheta_large) # [rad], array of theta for first phase
-observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max, dtheta_small)) # [rad], array of all theta
+# dtheta_large = 1 # [rad], large steps in theta for first phase of simulation
+# dtheta_small = 0.05 # [rad], small steps in theta for first phase of simulation
+# theta_max_beg = 85 # [rad], end of first phase and start of second phase of simulation
+# theta_min = 0 # [rad], minimum theta for simulation
+# theta_max = 90 # [rad], maximum theta for simulation
+# observer_theta_list_beg = np.arange(theta_min, theta_max_beg + dtheta_large, dtheta_large) # [rad], array of theta for first phase
+# observer_theta_list = np.append(observer_theta_list_beg, np.arange(observer_theta_list_beg[-1] + dtheta_small, theta_max, dtheta_small)) # [rad], array of all theta
 # observer_theta_list = np.arange(0, 360+2, 2)
+observer_theta_list = np.arange(0, 105, 15)
 
 # ================================ Position Vectors and Scalars =========================================
 def x_M(R: int | float, theta: int | float, phi: int | float) -> np.ndarray:
