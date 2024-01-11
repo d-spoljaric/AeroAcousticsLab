@@ -2,7 +2,6 @@ import numpy as np
 #import matplotlib.pyplot as plt
 from tqdm import tqdm
 from scipy.special import jv
-from scipy.integrate import quad
 
 # =============================== Given Simulation Constants ===================================
 # ========== ISA Conditions at 0m =========
@@ -29,14 +28,13 @@ dtheta_large = 2
 dtheta_small = 0.05
 theta_max_beg = 88
 theta_max = 90
-theta = [15, 30, 45, 60, 75, 90]
+theta = [0]
 
+F_s = T_blade # Since F is independent of time, the integration is always constant
+s = 0
 
+m = np.arange(-4,4+1,1)
 
-m_array = np.arange(0,4+1,1)
-#s_array = np.arange(-10,10+1,1)
-s_array = [0]
-time_array = np.linspace(0,2*np.pi/vel_rad,100)
 
 def compute_spl(p: int|float) -> int|float:
     '''
@@ -50,39 +48,21 @@ def compute_rms(x: int|float) -> int|float:
     return np.sqrt(np.mean(x**2))
 
 
-def F_t(F: int|float, t: np.ndarray, Omega: int|float) -> np.ndarray:
-#    return F * np.sin(Omega * t)
-    return F
-
-
 # ================================ Main ==========================================
 if __name__ == "__main__":
-    
-    SPL_list = np.zeros(shape=(len(theta),len(m_array)))
-    prms_list = np.zeros(shape=(len(theta),len(m_array)))
+    SPL_list = np.zeros(shape=(len(theta),len(m)))
+    prms_list = np.zeros(shape=(len(theta),len(m)))
 
-    p = np.zeros(shape=(len(theta),len(m_array)))
-    temp = np.zeros(shape=(len(theta),len(m_array)))
-    F_s = 0
+    p = np.zeros(shape=(len(theta),len(m)))
+    temp = np.zeros(shape=(len(theta),len(m)))
 
     for i in tqdm(range(len(theta)), desc = "Looping Through Observer theta"):
         observer_theta = np.deg2rad(theta[i])
-        for m in tqdm(range(len(m_array)), desc = "Looping throgh m"):
-            p_InnerSigma = 0
-            p_OuterSigma = (0+1j)*m_array[m]*B**2*vel_rad*np.exp(-(0+1j)*m_array[m]*B*vel_rad*R_0/c)/(4*np.pi*c*R_0)
-            for s in tqdm(range(len(s_array)), desc = "Looping through s"):
-                integral_real, error_real = quad(lambda t: np.real(F_t(T_blade,t,vel_rad)), 0, 2 * np.pi / vel_rad)
-                integral_imag, error_imag = quad(lambda t: np.imag(F_t(T_blade,t,vel_rad)), 0, 2 * np.pi / vel_rad)
-                F_s = vel_rad/2/np.pi*(integral_real + 1j * integral_imag)
-#                F_s = vel_rad/2/np.pi*np.trapz(F_t(T_blade,time_array,vel_rad)) * np.exp((0+1j)*s_array[s]*vel_rad*time_array)
-                p_temp = F_s*np.exp((0+1j)*(m_array[m]*B-s_array[s])*(observer_phi-np.pi/2))*jv(m_array[m]*B-s_array[s],m_array[m]*B*M_force*np.sin(observer_theta))*np.cos(observer_theta)
-                p_InnerSigma = p_InnerSigma + p_temp
-
-            print(f"Shape of F_s: {np.shape(F_s)}")
-            print(f"Shape of p_temp: {np.shape(p_temp)}")
-            p[i,m] = p_OuterSigma * p_InnerSigma
-            SPL_list[i,m] = compute_spl(p[i,m])
-            prms_list[i,m] = compute_rms(p[i,m])
+        for k in tqdm(range(len(m)), desc = "Looping throgh m"):
+            p[i,k] = (0+1j)*m[k]*B**2*vel_rad*np.exp(-(0+1j)*m[k]*B*vel_rad*R_0/c)/(4*np.pi*c*R_0)*F_s*np.exp((0+1j)*m[k]*B*(observer_phi-np.pi/2))*jv(m[k]*B,m[k]*B*M_force*np.sin(observer_theta))*np.cos(observer_theta)
+            temp[i,k] = jv(m[k]*B,m[k]*B*M_force*np.sin(observer_theta))
+            SPL_list[i,k] = compute_spl(p[i,k])
+            prms_list[i,k] = compute_rms(p[i,k])
 
     print(SPL_list)
 
