@@ -26,13 +26,13 @@ blade_offset = 2 * np.pi / B  # [rad], constant angle offset for each blade of t
 R_0 = 100  # [m], magnitude of observer location vector
 observer_phi = 45  # [deg], phi angle of observer position
 # observer_theta_list = np.arange(0.0001, 105, 15)
-observer_theta_list = np.linspace(0.00001, 90, 50)
-# observer_theta_list = np.array([45])
+# observer_theta_list = np.linspace(0.00001, 90, 300)
+observer_theta_list = np.array([45])
 
 periodic_force = 1000  # [N], amplitude of periodic force
 n = 1  # Determines the harmonic of the periodic force
 
-m_val = 50
+m_val = 1
 s_val = 0
 
 
@@ -58,7 +58,7 @@ def compute_rms(x: np.ndarray) -> int | float:
     return np.sqrt(np.mean(x ** 2))
 
 
-def pressure(phi: float | int, theta: float | int, force_func: object, s: np.ndarray | float, m: int) -> float:
+def pressure(phi: float | int, theta_inp: float | int, force_func: object, s: np.ndarray | float, m: int) -> float:
     global B
     global vel_rad
     global R_0
@@ -66,7 +66,7 @@ def pressure(phi: float | int, theta: float | int, force_func: object, s: np.nda
     global thrust_total
     global M_force
 
-    theta = np.radians(theta)
+    theta = np.radians(theta_inp)
     phi = np.radians(phi)
 
     Fs_real = (vel_rad / (2 * np.pi)) * \
@@ -103,7 +103,7 @@ def force_constant(t):
 
 # ============================== Main Loop ===============================================
 
-constant_force = True
+constant_force = False
 
 # Simulation arrays
 m_array = np.arange(-m_val, m_val + 1, 1)
@@ -152,6 +152,8 @@ for count_theta in tqdm(range(observer_theta_list.shape[0]), desc="Looping over 
     SPL_array[count_theta] = compute_spl(p_t)
 
 plt.plot(observer_theta_list, SPL_array)
-plt.ylim([0, 60])
+plt.ylim([0, 30])
 # plt.scatter(m_array*B, p_mB_array)
+plt.minorticks_on()
+plt.grid(True, which = "both")
 plt.show()
